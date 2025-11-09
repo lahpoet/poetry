@@ -1,0 +1,621 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>VerseFlow — Heartfelt Poetry</title>
+<style>
+:root{
+  --bg:#0b0f19; --card:#0e1520; --muted:#9aa4b2;
+  --accent:#7dd3fc; --accent-2:#c084fc; --glass: rgba(255,255,255,0.02);
+  color-scheme: dark; font-family: Inter, ui-sans-serif, system-ui;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:linear-gradient(180deg,var(--bg),#071022 140%);
+  color:#e6eef6; padding:24px; line-height:1.45; min-height:100vh; overflow-x:hidden; position:relative;
+}
+.container{max-width:1100px;margin:0 auto;position:relative;z-index:5}
+header{display:flex;align-items:center;gap:12px;justify-content:space-between;margin-bottom:18px}
+.brand{display:flex;gap:12px;align-items:center}
+.logo{width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,0.03);display:flex;align-items:center;justify-content:center;font-size:28px}
+h1{font-size:20px;margin:0}
+p.lead{color:var(--muted);margin:0}
+.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.icon-btn{background:transparent;border:0;color:var(--muted);cursor:pointer;font-size:18px;padding:8px;border-radius:8px}
+.icon-btn:hover{color:#fff;background:rgba(255,255,255,0.02)}
+.search{background:var(--glass);border:1px solid rgba(255,255,255,0.03);padding:8px 12px;border-radius:12px;min-width:220px;display:flex;gap:8px;align-items:center}
+.search input{background:transparent;border:0;outline:none;color:inherit;font-size:14px}
+.btn{background:linear-gradient(90deg,var(--accent),var(--accent-2));border:0;padding:10px 14px;border-radius:12px;color:#041426;font-weight:600;cursor:pointer}
+.btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)}
+main{display:grid;grid-template-columns:1fr 320px;gap:22px}
+.poems{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px}
+.card{background:linear-gradient(180deg,rgba(255,255,255,0.01),rgba(0,0,0,0.03));padding:16px;border-radius:12px;border:1px solid rgba(255,255,255,0.02);backdrop-filter:blur(6px)}
+.card h3{margin-bottom:6px;font-size:16px}
+.meta{display:flex;gap:8px;align-items:center;margin-top:12px;justify-content:space-between;color:var(--muted)}
+.poem-meta{font-size:12px;color:var(--muted);margin-top:8px}
+aside.sidebar{background:var(--card);padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,0.03)}
+form input,form textarea{width:100%;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
+form label{display:block;margin-bottom:6px;font-size:13px;color:var(--muted)}
+.field{margin-bottom:12px;position:relative}
+.eye-toggle{position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--muted);font-size:16px;user-select:none;}
+footer{margin-top:26px;color:var(--muted);font-size:13px;text-align:center}
+.empty{padding:28px;text-align:center;color:var(--muted);border-radius:12px;background:rgba(255,255,255,0.01);border:1px dashed rgba(255,255,255,0.03)}
+.modal-backdrop{position:fixed;inset:0;background:rgba(2,6,23,0.8);display:flex;align-items:center;justify-content:center;padding:24px;z-index:60}
+.modal{max-width:900px;width:100%;background:rgba(255,255,255,0.02);padding:18px;border-radius:12px;max-height:90vh;overflow:auto}
+.modal .close{float:right;border:0;background:transparent;color:var(--muted);font-size:18px;cursor:pointer}
+.login-page{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;text-align:center;background:transparent}
+.login-card{background:var(--card);padding:26px;border-radius:14px;border:1px solid rgba(255,255,255,0.04);width:100%;max-width:420px}
+.login-card input{margin-bottom:12px;width:100%;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.08);background:transparent;color:#fff}
+
+/* About Page */
+#aboutPage{display:none;max-width:800px;margin:0 auto;text-align:center}
+#aboutPage img{width:160px;height:160px;border-radius:50%;object-fit:cover;margin:20px auto;display:block;border:2px solid var(--accent)}
+#aboutPage textarea{width:100%;min-height:120px;background:transparent;border:1px solid rgba(255,255,255,0.08);color:white;border-radius:12px;padding:10px}
+
+/* List Page (compact titles) */
+#listPage{display:none;max-width:900px;margin:0 auto;color:inherit}
+.list-item{padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);background:rgba(255,255,255,0.01);margin-bottom:8px;cursor:pointer}
+.list-item:hover{background:rgba(255,255,255,0.02)}
+
+/* Comments area inside modal */
+.comments{margin-top:14px;border-top:1px dashed rgba(255,255,255,0.04);padding-top:12px}
+.comment{padding:10px;border-radius:10px;margin-bottom:8px;background:rgba(255,255,255,0.01);border:1px solid rgba(255,255,255,0.02)}
+.comment .meta{font-size:12px;color:var(--muted);display:flex;justify-content:space-between;align-items:center}
+.like-btn{background:transparent;border:0;color:var(--accent);cursor:pointer;font-weight:700}
+.count{color:var(--muted);font-size:13px;margin-left:8px}
+
+/* Dark clouds + calm drizzle */
+.clouds{position:fixed;left:0;top:0;width:200%;height:240px;pointer-events:none;z-index:1;opacity:0.9;filter:blur(6px)}
+.cloud{position:absolute;background:rgba(10,14,20,0.85);border-radius:50%;box-shadow:0 20px 60px rgba(0,0,0,0.6);opacity:0.95}
+.cloud.c1{width:420px;height:120px;left:-120px;top:10px}
+.cloud.c2{width:520px;height:140px;left:300px;top:20px}
+.cloud.c3{width:360px;height:100px;left:760px;top:0px}
+@keyframes drift{0%{transform:translateX(0);}100%{transform:translateX(-40%)}}
+.clouds{animation:drift 90s linear infinite}
+
+/* Calm drizzle: thin slow raindrops */
+.rain{position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:2;overflow:hidden}
+.drop{position:absolute;top:-10vh;width:1px;height:18px;background:rgba(255,255,255,0.04);opacity:0.6;transform:translateY(-10vh);animation:fall 6s linear infinite}
+@keyframes fall{0%{transform:translateY(-12vh);opacity:0.5;}100%{transform:translateY(110vh);opacity:0}}
+@media(max-width:880px){main{grid-template-columns:1fr} .clouds{height:160px}}
+</style>
+</head>
+<body>
+
+<!-- dark clouds -->
+<div class="clouds" aria-hidden="true">
+  <div class="cloud c1"></div>
+  <div class="cloud c2"></div>
+  <div class="cloud c3"></div>
+</div>
+
+<!-- calm drizzle -->
+<div class="rain" id="rainRoot" aria-hidden="true"></div>
+
+<!-- heartbeat sound -->
+<audio id="heartbeatSound" src="https://cdn.pixabay.com/audio/2022/03/15/audio_3d8c4bfb72.mp3" preload="auto" loop></audio>
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen" class="login-page">
+  <div class="login-card">
+    <h2>POWER IN POETRY</h2>
+    <select id="loginType">
+      <option value="reader">Reader Login</option>
+      <option value="author">Author Login</option>
+    </select><br><br>
+
+    <div id="readerLogin">
+      <div class="field">
+        <input id="readerEmail" type="email" placeholder="Enter your Gmail" required>
+      </div>
+      <div class="field">
+        <input id="readerPass" type="password" placeholder="Enter your password" required>
+        <span class="eye-toggle" onclick="togglePassword('readerPass', this)">👁️</span>
+      </div>
+    </div>
+
+    <div id="authorLogin" style="display:none">
+      <div class="field">
+        <input id="authorUser" type="text" placeholder="Author Username">
+      </div>
+      <div class="field">
+        <input id="authorPass" type="password" placeholder="Author Password">
+        <span class="eye-toggle" onclick="togglePassword('authorPass', this)">👁️</span>
+      </div>
+    </div>
+
+    <button class="btn" id="loginBtn">Login</button>
+  </div>
+</div>
+
+<!-- MAIN SITE -->
+<div id="siteContent" style="display:none">
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="logo">💔</div>
+        <div>
+          <h1>POWER IN POETRY</h1>
+          <p class="lead">A little place for sad hearts to whisper.</p>
+        </div>
+      </div>
+
+      <div class="controls">
+        <div class="search"><input id="searchInput" placeholder="Search poems..." /></div>
+        <button class="icon-btn" id="listBtn" title="List view">📜</button>
+        <button class="btn" id="newPoemBtn">+ Add Poem</button>
+        <button class="btn ghost" id="aboutBtn">About</button>
+        <button class="btn ghost" id="logoutBtn">Logout</button>
+      </div>
+    </header>
+
+    <!-- Main grid + sidebar -->
+    <main id="mainPage">
+      <section>
+        <h2>Recent Poems</h2>
+        <div id="poemsGrid" class="poems"></div>
+        <div id="emptyState" class="empty" style="display:none">No poems yet. Add one with <strong>Add Poem</strong>.</div>
+      </section>
+
+      <aside class="sidebar">
+        <h4 id="sidebarTitle">Quick Submit</h4>
+        <form id="quickForm">
+          <div class="field"><label>Title</label><input id="title" required></div>
+          <div class="field"><label>Author</label><input id="author" placeholder="Anonymous"></div>
+          <div class="field"><label>Tags</label><input id="tags" placeholder="love, loss, rain"></div>
+          <div class="field"><label>Poem</label><textarea id="text" rows="6" required></textarea></div>
+          <button class="btn" type="submit">Save</button>
+        </form>
+        <div id="viewStats" style="margin-top:15px;font-size:13px;color:var(--muted);display:none"></div>
+      </aside>
+    </main>
+
+    <!-- About Page -->
+    <div id="aboutPage" style="display:none">
+      <h2>About the Author</h2>
+      <img id="authorImg" src="" alt="Author Picture">
+      <input type="file" id="imgUpload" accept="image/*" style="display:none">
+      <button class="btn ghost" id="uploadBtn" style="margin-bottom:10px">Upload Picture</button>
+      <textarea id="aboutText" placeholder="Write about yourself here..."></textarea>
+      <div style="margin-top:10px">
+        <button class="btn" id="saveAbout">Save About Info</button>
+        <button class="btn ghost" id="backBtn">Back to Poems</button>
+      </div>
+    </div>
+
+    <!-- List Page (compact titles) -->
+    <div id="listPage" style="display:none">
+      <h2>All Poems (Titles)</h2>
+      <div id="listContainer"></div>
+      <div style="margin-top:12px">
+        <button class="btn ghost" id="listBack">Back</button>
+      </div>
+    </div>
+
+    <footer><small>Built for feelings & poems stored locally.</small></footer>
+  </div>
+
+  <div id="modalRoot"></div>
+</div>
+
+<script>
+/* -----------------------------
+   Constants & storage keys
+   ----------------------------- */
+const AUTHOR_USERNAME = "Author";
+const AUTHOR_PASSWORD = "poetry123";
+const LS_READERS = "verseflow_readers";
+const LS_POEMS = "verseflow_poems_v3"; // versioned
+const LS_ABOUT = "verseflow_about_v1";
+let isAuthor = false;
+let currentUser = null; // email for reader, 'author' for author
+
+/* -----------------------------
+   Rain generator (calm drizzle)
+   ----------------------------- */
+(function makeRain(){
+  const root = document.getElementById("rainRoot");
+  if(!root) return;
+  const drops = 40; // fairly calm drizzle
+  for(let i=0;i<drops;i++){
+    const d = document.createElement("div");
+    d.className = "drop";
+    d.style.left = (Math.random()*100) + "vw";
+    d.style.top = (-Math.random()*30) + "vh";
+    d.style.height = (12 + Math.random()*18) + "px";
+    d.style.opacity = 0.25 + Math.random()*0.4;
+    d.style.animationDelay = (Math.random()*6) + "s";
+    d.style.animationDuration = (5 + Math.random()*6) + "s";
+    root.appendChild(d);
+  }
+})();
+
+/* -----------------------------
+   Helpers
+   ----------------------------- */
+function togglePassword(id, el){
+  const input = document.getElementById(id);
+  if(input.type === "password"){ input.type = "text"; el.textContent = "🙈"; }
+  else { input.type = "password"; el.textContent = "👁️"; }
+}
+function playHeartbeat(){
+  const h = document.getElementById("heartbeatSound");
+  h.volume = 0.25;
+  h.play().catch(()=>{});
+}
+function genId(prefix="id"){ return prefix + "_" + Math.random().toString(36).slice(2,9); }
+function loadPoems(){ return JSON.parse(localStorage.getItem(LS_POEMS) || "[]"); }
+function savePoems(list){ localStorage.setItem(LS_POEMS, JSON.stringify(list)); }
+function formatDate(ts){ if(!ts) return ""; return new Date(ts).toLocaleString(); } // shows date + time
+function escapeHtml(str){ if(!str && str !== 0) return ""; return String(str).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll("\"","&quot;").replaceAll("'","&#039;"); }
+
+/* -----------------------------
+   Auth handling
+   ----------------------------- */
+const loginType = document.getElementById("loginType");
+const authorLogin = document.getElementById("authorLogin");
+const readerLogin = document.getElementById("readerLogin");
+loginType.addEventListener("change", ()=>{
+  const v = loginType.value;
+  authorLogin.style.display = v === "author" ? "block" : "none";
+  readerLogin.style.display = v === "author" ? "none" : "block";
+});
+
+document.getElementById("loginBtn").addEventListener("click", ()=>{
+  if(loginType.value === "author"){
+    const user = document.getElementById("authorUser").value.trim();
+    const pass = document.getElementById("authorPass").value.trim();
+    if(user === AUTHOR_USERNAME && pass === AUTHOR_PASSWORD){
+      isAuthor = true; currentUser = "author"; enterSite();
+    } else alert("Incorrect author credentials.");
+  } else {
+    const email = document.getElementById("readerEmail").value.trim();
+    const pass = document.getElementById("readerPass").value.trim();
+    if(!email.endsWith("@gmail.com") || pass.length < 4){ alert("Enter a valid Gmail and password (4+ chars)."); return; }
+    saveReader(email, pass);
+    isAuthor = false; currentUser = email; enterSite();
+  }
+});
+
+function saveReader(email, pass){
+  const readers = JSON.parse(localStorage.getItem(LS_READERS) || "{}");
+  readers[email] = { pass, lastSeen: Date.now() };
+  localStorage.setItem(LS_READERS, JSON.stringify(readers));
+}
+
+/* -----------------------------
+   Enter site
+   ----------------------------- */
+function enterSite(){
+  document.getElementById("loginScreen").style.display = "none";
+  document.getElementById("siteContent").style.display = "block";
+  playHeartbeat();
+  if(isAuthor) showReaderStats();
+  initPoetryApp();
+  loadAboutToUI();
+}
+
+/* -----------------------------
+   Reader stats (author view)
+   ----------------------------- */
+function showReaderStats(){
+  const readers = JSON.parse(localStorage.getItem(LS_READERS) || "{}");
+  const viewStats = document.getElementById("viewStats");
+  const emails = Object.keys(readers);
+  viewStats.style.display = "block";
+  if(!emails.length) viewStats.innerHTML = "No readers yet.";
+  else viewStats.innerHTML = `👁️ <strong>${emails.length}</strong> readers viewed:<br>${emails.join("<br>")}`;
+}
+
+/* -----------------------------
+   About page (author-only edit)
+   ----------------------------- */
+const aboutBtn = document.getElementById("aboutBtn");
+const aboutPage = document.getElementById("aboutPage");
+const mainPage = document.getElementById("mainPage");
+const imgUpload = document.getElementById("imgUpload");
+const authorImg = document.getElementById("authorImg");
+const aboutText = document.getElementById("aboutText");
+const uploadBtn = document.getElementById("uploadBtn");
+const saveAboutBtn = document.getElementById("saveAbout");
+const backBtn = document.getElementById("backBtn");
+
+aboutBtn.addEventListener("click", ()=>{
+  hideAllViews();
+  aboutPage.style.display = "block";
+  renderAboutMode();
+});
+
+backBtn.addEventListener("click", ()=>{
+  aboutPage.style.display = "none";
+  mainPage.style.display = "grid";
+});
+
+uploadBtn.addEventListener("click", ()=>{
+  if(!isAuthor){ alert("Only author may edit the About page."); return; }
+  imgUpload.click();
+});
+
+imgUpload.addEventListener("change", function(){
+  const f = this.files[0];
+  if(!f) return;
+  const r = new FileReader();
+  r.onload = e => { authorImg.src = e.target.result; };
+  r.readAsDataURL(f);
+});
+
+saveAboutBtn.addEventListener("click", ()=>{
+  if(!isAuthor){ alert("Only author may edit the About page."); return; }
+  const data = { img: authorImg.src || "", text: aboutText.value.trim(), updatedAt: Date.now() };
+  localStorage.setItem(LS_ABOUT, JSON.stringify(data));
+  alert("About info saved.");
+});
+
+function loadAboutToUI(){
+  const about = JSON.parse(localStorage.getItem(LS_ABOUT) || "{}");
+  authorImg.src = about.img || "https://via.placeholder.com/160";
+  aboutText.value = about.text || "";
+  renderAboutMode();
+}
+function renderAboutMode(){
+  if(isAuthor){
+    uploadBtn.style.display = "inline-block";
+    saveAboutBtn.style.display = "inline-block";
+    aboutText.removeAttribute("readonly");
+  } else {
+    uploadBtn.style.display = "none";
+    saveAboutBtn.style.display = "none";
+    aboutText.setAttribute("readonly","readonly");
+  }
+}
+
+/* -----------------------------
+   List page (compact titles)
+   ----------------------------- */
+const listBtn = document.getElementById("listBtn");
+const listPage = document.getElementById("listPage");
+const listContainer = document.getElementById("listContainer");
+const listBack = document.getElementById("listBack");
+listBtn.addEventListener("click", ()=>{
+  hideAllViews();
+  renderListPage();
+  listPage.style.display = "block";
+});
+listBack.addEventListener("click", ()=>{
+  listPage.style.display = "none";
+  mainPage.style.display = "grid";
+});
+function renderListPage(){
+  const poems = loadPoems().slice().sort((a,b)=>(b.date||0)-(a.date||0));
+  listContainer.innerHTML = "";
+  if(!poems.length) listContainer.innerHTML = "<div class='empty'>No poems yet.</div>";
+  poems.forEach(p=>{
+    const div = document.createElement("div");
+    div.className = "list-item";
+    div.textContent = p.title + " — " + (p.author||"Anonymous") + " • " + formatDate(p.date);
+    div.onclick = ()=> openModalForPoem(p.id);
+    listContainer.appendChild(div);
+  });
+}
+
+/* -----------------------------
+   Poems: load/save and UI
+   ----------------------------- */
+function initPoetryApp(){
+  const poemsGrid = document.getElementById("poemsGrid");
+  const emptyState = document.getElementById("emptyState");
+  const searchInput = document.getElementById("searchInput");
+  const quickForm = document.getElementById("quickForm");
+  const newPoemBtn = document.getElementById("newPoemBtn");
+
+  if(!isAuthor){ quickForm.style.display = "none"; newPoemBtn.style.display = "none"; }
+  else { quickForm.style.display = "block"; newPoemBtn.style.display = "inline-block"; }
+
+  let poems = loadPoems();
+
+  function render(){
+    const q = (searchInput.value || "").toLowerCase();
+    const list = poems.filter(p => p.title.toLowerCase().includes(q) || p.text.toLowerCase().includes(q) || (p.tags||[]).join(" ").toLowerCase().includes(q));
+    poemsGrid.innerHTML = "";
+    if(!list.length){ emptyState.style.display = "block"; return; } else emptyState.style.display = "none";
+    list.sort((a,b)=> (b.date||0) - (a.date||0));
+    list.forEach(p=>{
+      const el = document.createElement("article");
+      el.className = "card";
+      const likeCount = (p.likes||[]).length;
+      const commentCount = (p.comments||[]).length;
+      el.innerHTML = `
+        <div>
+          <h3>${escapeHtml(p.title)}</h3>
+          <div class="poem-meta">by ${escapeHtml(p.author||"Anonymous")} • posted ${formatDate(p.date)}</div>
+          <p class="excerpt" style="margin-top:8px">${escapeHtml(p.text.slice(0,120))}${p.text.length>120?'...':''}</p>
+        </div>
+        <div class="meta">
+          <small style="color:var(--muted)">${(p.tags||[]).join(", ")}</small>
+          <div>
+            <button class="btn ghost" data-action="read" data-id="${p.id}">Read</button>
+            <button class="btn ghost" data-action="like" data-id="${p.id}">♥</button>
+            <span class="count" id="like_${p.id}">${likeCount}</span>
+            <span class="count" style="margin-left:10px">💬 ${commentCount}</span>
+          </div>
+        </div>`;
+      poemsGrid.appendChild(el);
+      el.querySelector('[data-action="read"]').onclick = ()=> openModalForPoem(p.id);
+      el.querySelector('[data-action="like"]').onclick = ()=> toggleLike(p.id);
+      const likeBtn = el.querySelector('[data-action="like"]');
+      if(currentUser && currentUser !== "author" && (p.likes||[]).includes(currentUser)) {
+        likeBtn.style.opacity = "1"; likeBtn.style.color = "red";
+      }
+    });
+  }
+
+  quickForm.addEventListener("submit", e=>{
+    e.preventDefault();
+    if(!isAuthor){ alert("Only author can submit poems."); return; }
+    const title = document.getElementById("title").value.trim();
+    const author = document.getElementById("author").value.trim() || "Anonymous";
+    const tags = (document.getElementById("tags").value || "").split(",").map(s=>s.trim()).filter(Boolean);
+    const text = document.getElementById("text").value.trim();
+    if(!title || !text){ alert("Please fill title and poem text."); return; }
+    const newP = { id: genId("p"), title, author, tags, text, date: Date.now(), likes: [], comments: [] };
+    poems.unshift(newP); savePoems(poems); quickForm.reset(); render();
+  });
+
+  function toggleLike(id){
+    if(!currentUser || currentUser === "author"){ alert("Only logged-in readers can like poems."); return; }
+    const p = poems.find(x=>x.id===id);
+    if(!p) return;
+    p.likes = p.likes || [];
+    const idx = p.likes.indexOf(currentUser);
+    if(idx === -1) p.likes.push(currentUser); else p.likes.splice(idx,1);
+    savePoems(poems); render();
+    // update list page too if visible
+    if(listPage.style.display === "block") renderListPage();
+  }
+
+  /* Modal + comments */
+  const modalRoot = document.getElementById("modalRoot");
+  function openModalForPoem(id){
+    const p = poems.find(x=>x.id===id);
+    if(!p) return;
+    // show poem with timestamp
+    modalRoot.innerHTML = `
+      <div class="modal-backdrop">
+        <div class="modal" role="dialog" aria-modal="true">
+          <button class="close" id="closeModal">✕</button>
+          <h2>${escapeHtml(p.title)}</h2>
+          <div class="poem-meta">by ${escapeHtml(p.author||"Anonymous")} • posted ${formatDate(p.date)}</div>
+          <pre style="white-space:pre-wrap;margin-top:12px">${escapeHtml(p.text)}</pre>
+
+          <div style="margin-top:12px;display:flex;gap:8px;align-items:center">
+            <button id="modalLike" class="like-btn">♥</button>
+            <span id="modalLikeCount">${(p.likes||[]).length}</span>
+            <span style="color:var(--muted);margin-left:10px">💬 ${(p.comments||[]).length}</span>
+          </div>
+
+          <div class="comments" id="commentsArea">
+            <h4>Comments</h4>
+            <div id="commentsList"></div>
+
+            <div id="commentFormWrap" style="margin-top:12px">
+              <textarea id="commentText" placeholder="Write a comment..." style="width:100%;min-height:70px;border-radius:8px;padding:8px;background:transparent;border:1px solid rgba(255,255,255,0.05);"></textarea>
+              <div style="display:flex;gap:8px;margin-top:8px">
+                <button id="postComment" class="btn">Post</button>
+                <button id="closeModal2" class="btn ghost">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    // hide comment form for author
+    if(currentUser === "author") document.getElementById("commentFormWrap").style.display = "none";
+
+    function renderComments(){
+      const listEl = document.getElementById("commentsList");
+      listEl.innerHTML = "";
+      (p.comments || []).forEach(c=>{
+        const div = document.createElement("div");
+        div.className = "comment";
+        const meta = document.createElement("div");
+        meta.className = "meta";
+        meta.innerHTML = `<span><strong>${escapeHtml(c.user)}</strong> • commented ${formatDate(c.date)}</span>`;
+        const right = document.createElement("div");
+        if(isAuthor){
+          const del = document.createElement("button"); del.className = "btn ghost"; del.textContent = "Delete";
+          del.onclick = ()=>{
+            if(confirm("Delete this comment?")){
+              p.comments = p.comments.filter(x=>x.id !== c.id);
+              savePoems(poems); renderComments(); updateModalCounts(); initPoetryApp();
+            }
+          };
+          right.appendChild(del);
+        }
+        meta.appendChild(right);
+        const text = document.createElement("div"); text.style.marginTop = "8px"; text.textContent = c.text;
+        div.appendChild(meta); div.appendChild(text);
+        listEl.appendChild(div);
+      });
+      if(!(p.comments||[]).length) listEl.innerHTML = "<div style='color:var(--muted)'>No comments yet — be the first to say something kind.</div>";
+    }
+    renderComments();
+
+    // like button in modal
+    const modalLike = document.getElementById("modalLike");
+    modalLike.onclick = ()=>{
+      if(!currentUser || currentUser === "author"){ alert("Only logged-in readers can like poems."); return; }
+      p.likes = p.likes || [];
+      const i = p.likes.indexOf(currentUser);
+      if(i === -1) p.likes.push(currentUser); else p.likes.splice(i,1);
+      savePoems(poems); updateModalCounts(); initPoetryApp(); renderListPage();
+    };
+    function updateModalCounts(){ document.getElementById("modalLikeCount").textContent = (p.likes||[]).length; }
+
+    // post comment
+    const postBtn = document.getElementById("postComment");
+    if(postBtn){
+      postBtn.onclick = ()=>{
+        if(!currentUser || currentUser === "author"){ alert("Only readers can post comments."); return; }
+        const txt = document.getElementById("commentText").value.trim();
+        if(!txt) return alert("Write something before posting.");
+        const newC = { id: genId("c"), user: currentUser, text: txt, date: Date.now() };
+        p.comments = p.comments || [];
+        p.comments.push(newC);
+        savePoems(poems);
+        document.getElementById("commentText").value = "";
+        renderComments(); updateModalCounts(); initPoetryApp();
+      };
+    }
+
+    // close
+    document.getElementById("closeModal").onclick = ()=> modalRoot.innerHTML = "";
+    const closeModal2 = document.getElementById("closeModal2");
+    if(closeModal2) closeModal2.onclick = ()=> modalRoot.innerHTML = "";
+  }
+
+  render();
+}
+
+/* -----------------------------
+   Seed sample poem if none
+   ----------------------------- */
+(function seedIfEmpty(){
+  const p = loadPoems();
+  if(!p.length){
+    const sample = [{
+      id: genId("p"), title: "Lonely Rain",
+      author: "Author", tags: ["rain","sad"],
+      text: "The rain remembers the names I whispered...\nAnd keeps them in its pockets.",
+      date: Date.now(), likes: [], comments: []
+    }];
+    savePoems(sample);
+  }
+})();
+
+/* -----------------------------
+   UI helpers
+   ----------------------------- */
+function hideAllViews(){
+  document.getElementById("mainPage").style.display = "none";
+  document.getElementById("aboutPage").style.display = "none";
+  document.getElementById("listPage").style.display = "none";
+}
+
+/* -----------------------------
+   Logout
+   ----------------------------- */
+document.getElementById("logoutBtn").addEventListener("click", ()=> {
+  location.reload();
+});
+
+/* -----------------------------
+   Start heartbeat (background)
+   ----------------------------- */
+playHeartbeat();
+
+/* expose init for debugging if needed */
+window.initPoetryApp = initPoetryApp;
+</script>
+</body>
+</html>
